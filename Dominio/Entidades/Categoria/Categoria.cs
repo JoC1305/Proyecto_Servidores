@@ -1,42 +1,33 @@
+using Dominio.Comun;
+using Dominio.Compartido;
+using Dominio.Entidades.Inventario;
+
 namespace Dominio.Entidades.Categoria;
 
-public class Categoria
+public class Categoria : Entidad
 {
-    public Guid Id { get; private set; }
+    public Nombre Nombre { get; private set; } = null!;
 
-    public string Nombre { get; private set; } = null!;
-
-    public string Descripcion { get; private set; } = string.Empty;
+    public Descripcion Descripcion { get; private set; } = null!;
 
     private Categoria()
     {
     }
 
-    private Categoria(string nombre, string? descripcion)
+    private Categoria(Nombre nombre, Descripcion descripcion)
     {
-        Id = Guid.NewGuid();
-        Nombre = ValidarTextoObligatorio(nombre, nameof(nombre));
-        Descripcion = descripcion?.Trim() ?? string.Empty;
+        Nombre = nombre;
+        Descripcion = descripcion;
     }
 
-    public static Categoria Crear(string nombre, string? descripcion = null)
+    public static Categoria Crear(Nombre nombre, Descripcion descripcion)
     {
         return new Categoria(nombre, descripcion);
     }
 
-    public void Actualizar(string nombre, string? descripcion = null)
+    public void Actualizar(Nombre nombre, Descripcion descripcion)
     {
-        Nombre = ValidarTextoObligatorio(nombre, nameof(nombre));
-        Descripcion = descripcion?.Trim() ?? string.Empty;
-    }
-
-    private static string ValidarTextoObligatorio(string valor, string parametro)
-    {
-        if (string.IsNullOrWhiteSpace(valor))
-        {
-            throw new ArgumentException("El valor no puede estar vacio.", parametro);
-        }
-
-        return valor.Trim();
+        Nombre = nombre;
+        Descripcion = descripcion;
     }
 }

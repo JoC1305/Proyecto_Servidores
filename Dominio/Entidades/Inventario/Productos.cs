@@ -1,70 +1,61 @@
+using Dominio.Comun;
+using Dominio.Compartido;
+
 namespace Dominio.Entidades.Inventario;
 
-public class Producto
+public class Producto : Entidad
 {
-    public Guid Id { get; private set; }
-    public string Codigo_Barras { get; private set; } = null!;
-    public string Nombre { get; private set; } = null!;
-    public decimal PrecioCompra { get; private set; }
-    public decimal PrecioVenta { get; private set; }
-    public string Descripcion { get; private set; } = string.Empty;
-    public int Stock { get; private set; }
-    public int StockMinimo { get; private set; }
+    public CodigoBarras CodigoBarras { get; private set; } = null!;
+
+    public Nombre Nombre { get; private set; } = null!;
+
+    public Dinero PrecioCompra { get; private set; } = null!;
+
+    public Dinero PrecioVenta { get; private set; } = null!;
+
+    public Descripcion Descripcion { get; private set; } = null!;
+
+    public Cantidad Stock { get; private set; } = null!;
+
+    public Cantidad StockMinimo { get; private set; } = null!;
+
     public bool Activo { get; private set; }
+
     public DateTime FechaCreacion { get; private set; }
+
     public Guid IdCategoria { get; private set; }
-    public decimal Ganancia => PrecioVenta - PrecioCompra;
+
+    public Dinero Ganancia => PrecioVenta - PrecioCompra;
 
     private Producto()
     {
     }
 
     private Producto(
-        string codigoBarras,
-        string nombre,
-        decimal precioCompra,
-        decimal precioVenta,
-        string? descripcion,
-        int stock,
-        int stockMinimo,
-        bool activo,
-        DateTime fechaCreacion,
-        Guid idCategoria
+        CodigoBarras codigoBarras,
+        Nombre nombre,
+        Dinero precioCompra,
+        Dinero precioVenta,
+        Descripcion descripcion,
+        Cantidad stock,
+        Cantidad stockMinimo,
+        Guid idCategoria,
+        DateTime fechaCreacion
     )
     {
-        if (string.IsNullOrWhiteSpace(codigoBarras))
+        if (precioCompra.Monto <= 0)
         {
-            throw new ArgumentException("El codigo de barras no puede estar vacio.", nameof(codigoBarras));
+            throw new ArgumentException("El precio de compra debe ser mayor que cero.");
         }
 
-        if (string.IsNullOrWhiteSpace(nombre))
+        if (precioVenta.Monto <= 0)
         {
-            throw new ArgumentException("El nombre no puede estar vacio.", nameof(nombre));
+            throw new ArgumentException("El precio de venta debe ser mayor que cero.");
         }
 
-        if (precioCompra <= 0)
+        if (precioVenta.Monto < precioCompra.Monto)
         {
-            throw new ArgumentOutOfRangeException(nameof(precioCompra), "El precio de compra debe ser mayor que cero.");
-        }
-
-        if (precioVenta <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(precioVenta), "El precio de venta debe ser mayor que cero.");
-        }
-
-        if (precioVenta < precioCompra)
-        {
-            throw new ArgumentException("El precio de venta no puede ser menor que el precio de compra.", nameof(precioVenta));
-        }
-
-        if (stock < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(stock), "El stock no puede ser negativo.");
-        }
-
-        if (stockMinimo < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(stockMinimo), "El stock minimo no puede ser negativo.");
+            throw new ArgumentException("El precio de venta no puede ser menor que el precio de compra.");
         }
 
         if (idCategoria == Guid.Empty)
@@ -72,28 +63,27 @@ public class Producto
             throw new ArgumentException("La categoria es obligatoria.", nameof(idCategoria));
         }
 
-        Id = Guid.NewGuid();
-        Codigo_Barras = codigoBarras.Trim();
-        Nombre = nombre.Trim();
+        CodigoBarras = codigoBarras;
+        Nombre = nombre;
         PrecioCompra = precioCompra;
         PrecioVenta = precioVenta;
-        Descripcion = descripcion?.Trim() ?? string.Empty;
+        Descripcion = descripcion;
         Stock = stock;
         StockMinimo = stockMinimo;
-        Activo = activo;
-        FechaCreacion = fechaCreacion == default ? DateTime.UtcNow : fechaCreacion;
+        Activo = true;
         IdCategoria = idCategoria;
+        FechaCreacion = fechaCreacion;
     }
 
     public static Producto Crear(
-        string codigoBarras,
-        string nombre,
-        decimal precioCompra,
-        decimal precioVenta,
+        CodigoBarras codigoBarras,
+        Nombre nombre,
+        Dinero precioCompra,
+        Dinero precioVenta,
         Guid idCategoria,
-        string? descripcion = null,
-        int stock = 0,
-        int stockMinimo = 0,
+        Descripcion? descripcion = null,
+        Cantidad? stock = null,
+        Cantidad? stockMinimo = null,
         DateTime? fechaCreacion = null
     )
     {
@@ -102,47 +92,30 @@ public class Producto
             nombre,
             precioCompra,
             precioVenta,
-            descripcion,
-            stock,
-            stockMinimo,
-            true,
-            fechaCreacion ?? DateTime.UtcNow,
-            idCategoria
+            descripcion ?? new Descripcion(string.Empty),
+            stock ?? Cantidad.Cero,
+            stockMinimo ?? Cantidad.Cero,
+            idCategoria,
+            fechaCreacion ?? DateTime.UtcNow
         );
     }
 
-    public void AumentarStock(int cantidad)
+    public void AumentarStock(Cantidad cantidad)
     {
-        if (cantidad <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(cantidad), "La cantidad debe ser mayor que cero.");
-        }
-
-        Stock += cantidad;
+        Stock = new Cantidad(Stock.Valor + cantidad.Valor);
     }
 
-    public void DisminuirStock(int cantidad)
+    public void DisminuirStock(Cantidad cantidad)
     {
-        if (cantidad <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(cantidad), "La cantidad debe ser mayor que cero.");
-        }
-
-        if (Stock - cantidad < 0)
+        if (Stock.Valor - cantidad.Valor < 0)
         {
             throw new InvalidOperationException("No hay stock suficiente para realizar la salida.");
         }
 
-        Stock -= cantidad;
+        Stock = new Cantidad(Stock.Valor - cantidad.Valor);
     }
 
-    public void Activar()
-    {
-        Activo = true;
-    }
+    public void Activar() => Activo = true;
 
-    public void Desactivar()
-    {
-        Activo = false;
-    }
+    public void Desactivar() => Activo = false;
 }

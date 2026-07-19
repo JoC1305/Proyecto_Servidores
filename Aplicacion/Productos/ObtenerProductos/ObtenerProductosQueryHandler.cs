@@ -22,14 +22,14 @@ public sealed class ObtenerProductosQueryHandler : IQueryHandler<ObtenerProducto
         var resultado = productos
             .Select(producto => new ProductoDto(
                 producto.Id,
-                producto.Codigo_Barras,
-                producto.Nombre,
-                producto.PrecioCompra,
-                producto.PrecioVenta,
-                producto.Ganancia,
-                producto.Descripcion,
-                producto.Stock,
-                producto.StockMinimo,
+                producto.CodigoBarras.Valor,
+                producto.Nombre.Valor,
+                producto.PrecioCompra.Monto,
+                producto.PrecioVenta.Monto,
+                producto.Ganancia.Monto,
+                producto.Descripcion.Valor,
+                producto.Stock.Valor,
+                producto.StockMinimo.Valor,
                 producto.Activo,
                 producto.FechaCreacion,
                 producto.IdCategoria

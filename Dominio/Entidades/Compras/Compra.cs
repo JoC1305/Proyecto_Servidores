@@ -1,19 +1,26 @@
+using Dominio.Comun;
+using Dominio.Compartido;
+using Dominio.Entidades.Inventario;
+
 namespace Dominio.Entidades.Compras;
 
-public class Compra
+public class Compra : Entidad
 {
-    public Guid Id { get; private set; }
     public Guid ProveedorId { get; private set; }
+
     public Guid PedidoId { get; private set; }
+
     public DateTime Fecha { get; private set; }
-    public decimal Total { get; private set; }
+
+    public Dinero Total { get; private set; } = null!;
+
     public ICollection<DetalleCompra> Detalles { get; private set; } = new List<DetalleCompra>();
 
     private Compra()
     {
     }
 
-    private Compra(Guid proveedorId, Guid pedidoId, DateTime fecha, decimal total)
+    private Compra(Guid proveedorId, Guid pedidoId, DateTime fecha)
     {
         if (proveedorId == Guid.Empty)
         {
@@ -25,33 +32,22 @@ public class Compra
             throw new ArgumentException("El pedido es obligatorio.", nameof(pedidoId));
         }
 
-        if (total < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(total), "El total no puede ser negativo.");
-        }
-
-        Id = Guid.NewGuid();
         ProveedorId = proveedorId;
         PedidoId = pedidoId;
         Fecha = fecha == default ? DateTime.UtcNow : fecha;
-        Total = total;
+        Total = Dinero.Cero();
         Detalles = new List<DetalleCompra>();
-    }
-
-    public static Compra Crear(Guid proveedorId, Guid pedidoId, decimal total, DateTime? fecha = null)
-    {
-        return new Compra(proveedorId, pedidoId, fecha ?? DateTime.UtcNow, total);
     }
 
     public static Compra Crear(Guid proveedorId, Guid pedidoId, DateTime? fecha = null)
     {
-        return new Compra(proveedorId, pedidoId, fecha ?? DateTime.UtcNow, 0);
+        return new Compra(proveedorId, pedidoId, fecha ?? DateTime.UtcNow);
     }
 
-    public void AgregarDetalle(Guid productoId, int cantidad, decimal precioCompra)
+    public void AgregarDetalle(Guid productoId, Cantidad cantidad, Dinero precioCompra)
     {
         var detalle = DetalleCompra.Crear(Id, productoId, cantidad, precioCompra);
         Detalles.Add(detalle);
-        Total += detalle.Subtotal;
+        Total = Total + detalle.Subtotal;
     }
 }

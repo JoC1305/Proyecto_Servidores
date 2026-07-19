@@ -1,17 +1,15 @@
 using Dominio.Comun;
+using Dominio.Compartido;
+using Dominio.Entidades.Inventario;
 using Dominio.Eventos;
 
 namespace Dominio.Entidades.Ventas;
 
-public class Venta
+public class Venta : Entidad
 {
-    private readonly List<IDomainEvent> eventosDominio = new();
-
-    public Guid Id { get; private set; }
-
     public DateTime Fecha { get; private set; }
 
-    public decimal Total { get; private set; }
+    public Dinero Total { get; private set; } = null!;
 
     public MetodoPago MetodoPago { get; private set; }
 
@@ -19,7 +17,9 @@ public class Venta
 
     public ICollection<DetalleVenta> Detalles { get; private set; } = new List<DetalleVenta>();
 
-    public IReadOnlyCollection<IDomainEvent> EventosDominio => eventosDominio.AsReadOnly();
+    private Venta()
+    {
+    }
 
     private Venta(Guid usuarioId, MetodoPago metodoPago, DateTime fecha)
     {
@@ -33,10 +33,8 @@ public class Venta
             throw new ArgumentException("El metodo de pago no es valido.", nameof(metodoPago));
         }
 
-
-        Id = Guid.NewGuid();
         Fecha = fecha == default ? DateTime.UtcNow : fecha;
-        Total = 0;
+        Total = Dinero.Cero();
         MetodoPago = metodoPago;
         UsuarioId = usuarioId;
         Detalles = new List<DetalleVenta>();
@@ -47,11 +45,11 @@ public class Venta
         return new Venta(usuarioId, metodoPago, fecha ?? DateTime.UtcNow);
     }
 
-    public void AgregarDetalle(Guid productoId, int cantidad, decimal precioUnitario)
+    public void AgregarDetalle(Guid productoId, Cantidad cantidad, Dinero precioUnitario)
     {
         var detalle = DetalleVenta.Crear(Id, productoId, cantidad, precioUnitario);
         Detalles.Add(detalle);
-        Total += detalle.Subtotal;
+        Total = Total + detalle.Subtotal;
     }
 
     public void RegistrarEventoVentaRegistrada()
@@ -61,11 +59,6 @@ public class Venta
             throw new InvalidOperationException("La venta debe tener al menos un detalle.");
         }
 
-        eventosDominio.Add(new VentaRegistrada(Id, UsuarioId, Total));
-    }
-
-    public void LimpiarEventosDominio()
-    {
-        eventosDominio.Clear();
+        RegistrarEventoDominio(new VentaRegistrada(Id, UsuarioId, Total.Monto));
     }
 }

@@ -9,7 +9,9 @@ public sealed record Cantidad
         "La cantidad debe ser mayor o igual a cero."
     );
 
-    private Cantidad(int valor) => Valor = valor;
+    public static readonly Cantidad Cero = new(0);
+
+    public Cantidad(int valor) => Valor = valor;
 
     public int Valor { get; init; }
 

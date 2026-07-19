@@ -9,7 +9,7 @@ public sealed record CodigoBarras
         "El código de barras no puede estar vacío."
     );
 
-    private CodigoBarras(string valor) => Valor = valor;
+    public CodigoBarras(string valor) => Valor = valor;
 
     public string Valor { get; init; }
 

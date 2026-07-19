@@ -1,41 +1,35 @@
+using Dominio.Comun;
+using Dominio.Compartido;
+
 namespace Dominio.Entidades.Proveedores;
 
-public class Proveedor
+public class Proveedor : Entidad
 {
-    public Guid Id { get; private set; }
+    public Nombre Nombre { get; private set; } = null!;
 
-    public string Nombre { get; private set; } = null!;
+    public Telefono? Telefono { get; private set; }
 
-    public string Telefono { get; private set; } = string.Empty;
+    public CorreoElectronico? Correo { get; private set; }
 
-    public string Correo { get; private set; } = string.Empty;
-
-    private Proveedor(string nombre, string? telefono, string? correo)
+    private Proveedor()
     {
-        Id = Guid.NewGuid();
-        Nombre = ValidarTextoObligatorio(nombre, nameof(nombre));
-        Telefono = telefono?.Trim() ?? string.Empty;
-        Correo = correo?.Trim() ?? string.Empty;
     }
 
-    public static Proveedor Crear(string nombre, string? telefono = null, string? correo = null)
+    private Proveedor(Nombre nombre, Telefono? telefono, CorreoElectronico? correo)
+    {
+        Nombre = nombre;
+        Telefono = telefono;
+        Correo = correo;
+    }
+
+    public static Proveedor Crear(Nombre nombre, Telefono? telefono = null, CorreoElectronico? correo = null)
     {
         return new Proveedor(nombre, telefono, correo);
     }
 
-    public void ActualizarContacto(string? telefono, string? correo)
+    public void ActualizarContacto(Telefono? telefono, CorreoElectronico? correo)
     {
-        Telefono = telefono?.Trim() ?? string.Empty;
-        Correo = correo?.Trim() ?? string.Empty;
-    }
-
-    private static string ValidarTextoObligatorio(string valor, string parametro)
-    {
-        if (string.IsNullOrWhiteSpace(valor))
-        {
-            throw new ArgumentException("El valor no puede estar vacio.", parametro);
-        }
-
-        return valor.Trim();
+        Telefono = telefono;
+        Correo = correo;
     }
 }

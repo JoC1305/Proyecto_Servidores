@@ -2,6 +2,7 @@ using Aplicacion.Abstracciones.Eventos;
 using Aplicacion.Abstracciones.Persistencia;
 using Aplicacion.Comun.CQRS;
 using Aplicacion.Comun.Resultados;
+using Dominio.Compartido;
 using Dominio.Entidades.Contabilidad;
 using Dominio.Entidades.Inventario;
 using Dominio.Entidades.Ventas;
@@ -60,23 +61,31 @@ public sealed class RegistrarVentaCommandHandler : ICommandHandler<RegistrarVent
                     return Result<Guid>.Fallo(new Error("Producto.NoEncontrado", "Uno de los productos indicados no existe."));
                 }
 
-                producto.DisminuirStock(detalle.Cantidad);
-                venta.AgregarDetalle(detalle.ProductoId, detalle.Cantidad, detalle.PrecioUnitario);
-                movimientos.Add(MovimientoInventario.CrearSalida(detalle.ProductoId, detalle.Cantidad, $"Venta {venta.Id}"));
+                var cantidadResult = Cantidad.CrearPositiva(detalle.Cantidad);
+                if (cantidadResult.EsFallo)
+                {
+                    return Result<Guid>.Fallo(new Error(cantidadResult.Error.Codigo, cantidadResult.Error.Nombre));
+                }
+
+                var precio = new Dinero(detalle.PrecioUnitario, "USD");
+
+                producto.DisminuirStock(cantidadResult.Valor);
+                venta.AgregarDetalle(detalle.ProductoId, cantidadResult.Valor, precio);
+                movimientos.Add(MovimientoInventario.CrearSalida(detalle.ProductoId, cantidadResult.Valor, $"Venta {venta.Id}"));
             }
 
             venta.RegistrarEventoVentaRegistrada();
 
             var asiento = AsientoContable.Crear($"Registro de venta {venta.Id}");
-            asiento.AgregarDetalle(cuentaDebitoId, venta.Total, 0);
-            asiento.AgregarDetalle(command.CuentaVentasId, 0, venta.Total);
+            asiento.AgregarDetalle(cuentaDebitoId, venta.Total.Monto, 0);
+            asiento.AgregarDetalle(command.CuentaVentasId, 0, venta.Total.Monto);
 
             await repositorioVenta.AgregarAsync(venta, cancellationToken);
             await repositorioMovimientoInventario.AgregarRangoAsync(movimientos, cancellationToken);
             await repositorioAsientoContable.AgregarAsync(asiento, cancellationToken);
             await unidadDeTrabajo.GuardarCambiosAsync(cancellationToken);
 
-            await domainEventDispatcher.DispatchAsync(venta.EventosDominio, cancellationToken);
+            await domainEventDispatcher.DispatchAsync(venta.ObtenerEventosDominio(), cancellationToken);
             venta.LimpiarEventosDominio();
 
             return Result<Guid>.Exito(venta.Id);

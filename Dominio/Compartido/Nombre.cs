@@ -9,7 +9,7 @@ public sealed record Nombre
         "El nombre no puede estar vacío."
     );
 
-    private Nombre(string valor) => Valor = valor;
+    public Nombre(string valor) => Valor = valor;
 
     public string Valor { get; init; }
 

@@ -1,3 +1,6 @@
+using Dominio.Compartido;
+using Dominio.Entidades.Inventario;
+
 namespace Dominio.Entidades.Ventas;
 
 public class DetalleVenta
@@ -8,13 +11,13 @@ public class DetalleVenta
 
     public Guid ProductoId { get; private set; }
 
-    public int Cantidad { get; private set; }
+    public Cantidad Cantidad { get; private set; } = null!;
 
-    public decimal PrecioUnitario { get; private set; }
+    public Dinero PrecioUnitario { get; private set; } = null!;
 
-    public decimal Subtotal => Cantidad * PrecioUnitario;
+    public Dinero Subtotal => new(Cantidad.Valor * PrecioUnitario.Monto, PrecioUnitario.Moneda);
 
-    private DetalleVenta(Guid ventaId, Guid productoId, int cantidad, decimal precioUnitario)
+    private DetalleVenta(Guid ventaId, Guid productoId, Cantidad cantidad, Dinero precioUnitario)
     {
         if (ventaId == Guid.Empty)
         {
@@ -26,16 +29,6 @@ public class DetalleVenta
             throw new ArgumentException("El producto es obligatorio.", nameof(productoId));
         }
 
-        if (cantidad <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(cantidad), "La cantidad debe ser mayor que cero.");
-        }
-
-        if (precioUnitario <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(precioUnitario), "El precio unitario debe ser mayor que cero.");
-        }
-
         Id = Guid.NewGuid();
         VentaId = ventaId;
         ProductoId = productoId;
@@ -43,7 +36,7 @@ public class DetalleVenta
         PrecioUnitario = precioUnitario;
     }
 
-    public static DetalleVenta Crear(Guid ventaId, Guid productoId, int cantidad, decimal precioUnitario)
+    public static DetalleVenta Crear(Guid ventaId, Guid productoId, Cantidad cantidad, Dinero precioUnitario)
     {
         return new DetalleVenta(ventaId, productoId, cantidad, precioUnitario);
     }
