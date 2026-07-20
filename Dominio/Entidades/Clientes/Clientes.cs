@@ -1,48 +1,38 @@
+using Dominio.Comun;
+using Dominio.Compartido;
+
 namespace Dominio.Entidades.Clientes;
 
-public class Cliente
+public class Cliente : Entidad
 {
-    public Guid Id { get; private set; }
+    public Cedula Cedula { get; private set; } = null!;
 
-    public string Cedula { get; private set; } = null!;
+    public Nombre Nombre { get; private set; } = null!;
 
-    public string Nombre { get; private set; } = null!;
+    public Telefono? Telefono { get; private set; }
 
-    public string Telefono { get; private set; } = string.Empty;
-
-    public string Correo { get; private set; } = string.Empty;
+    public CorreoElectronico? Correo { get; private set; }
 
     private Cliente()
     {
     }
 
-    private Cliente(string cedula, string nombre, string? telefono, string? correo)
+    private Cliente(Cedula cedula, Nombre nombre, Telefono? telefono, CorreoElectronico? correo)
     {
-        Id = Guid.NewGuid();
-        Cedula = ValidarTextoObligatorio(cedula, nameof(cedula));
-        Nombre = ValidarTextoObligatorio(nombre, nameof(nombre));
-        Telefono = telefono?.Trim() ?? string.Empty;
-        Correo = correo?.Trim() ?? string.Empty;
+        Cedula = cedula;
+        Nombre = nombre;
+        Telefono = telefono;
+        Correo = correo;
     }
 
-    public static Cliente Crear(string cedula, string nombre, string? telefono = null, string? correo = null)
+    public static Cliente Crear(Cedula cedula, Nombre nombre, Telefono? telefono = null, CorreoElectronico? correo = null)
     {
         return new Cliente(cedula, nombre, telefono, correo);
     }
 
-    public void ActualizarContacto(string? telefono, string? correo)
+    public void ActualizarContacto(Telefono? telefono, CorreoElectronico? correo)
     {
-        Telefono = telefono?.Trim() ?? string.Empty;
-        Correo = correo?.Trim() ?? string.Empty;
-    }
-
-    private static string ValidarTextoObligatorio(string valor, string parametro)
-    {
-        if (string.IsNullOrWhiteSpace(valor))
-        {
-            throw new ArgumentException("El valor no puede estar vacio.", parametro);
-        }
-
-        return valor.Trim();
+        Telefono = telefono;
+        Correo = correo;
     }
 }

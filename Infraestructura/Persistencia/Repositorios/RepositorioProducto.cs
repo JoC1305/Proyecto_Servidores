@@ -31,6 +31,6 @@ public sealed class RepositorioProducto : IRepositorioProducto
     public Task<bool> ExisteCodigoBarrasAsync(string codigoBarras, CancellationToken cancellationToken = default)
     {
         var codigoNormalizado = codigoBarras.Trim();
-        return contextoDb.Productos.AnyAsync(producto => producto.Codigo_Barras == codigoNormalizado, cancellationToken);
+        return contextoDb.Productos.AnyAsync(producto => producto.CodigoBarras.Valor == codigoNormalizado, cancellationToken);
     }
 }

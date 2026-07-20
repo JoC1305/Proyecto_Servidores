@@ -20,7 +20,10 @@ public sealed class ObtenerCategoriasQueryHandler : IQueryHandler<ObtenerCategor
     {
         var categorias = await repositorioCategoria.ObtenerTodasAsync(cancellationToken);
         var resultado = categorias
-            .Select(categoria => new CategoriaDto(categoria.Id, categoria.Nombre, categoria.Descripcion))
+            .Select(categoria => new CategoriaDto(
+                categoria.Id,
+                categoria.Nombre.Valor,
+                categoria.Descripcion.Valor))
             .ToArray();
 
         return Result<IReadOnlyCollection<CategoriaDto>>.Exito(resultado);

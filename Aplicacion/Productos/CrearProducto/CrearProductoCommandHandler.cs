@@ -1,6 +1,7 @@
 using Aplicacion.Abstracciones.Persistencia;
 using Aplicacion.Comun.CQRS;
 using Aplicacion.Comun.Resultados;
+using Dominio.Compartido;
 using Dominio.Entidades.Inventario;
 
 namespace Aplicacion.Productos.CrearProducto;
@@ -35,17 +36,41 @@ public sealed class CrearProductoCommandHandler : ICommandHandler<CrearProductoC
             return Result<Guid>.Fallo(new Error("Categoria.NoEncontrada", "La categoria indicada no existe."));
         }
 
+        var codigoBarrasResult = CodigoBarras.Crear(command.CodigoBarras);
+        if (codigoBarrasResult.EsFallo)
+        {
+            return Result<Guid>.Fallo(new Error(codigoBarrasResult.Error.Codigo, codigoBarrasResult.Error.Nombre));
+        }
+
+        var nombreResult = Nombre.Crear(command.Nombre);
+        if (nombreResult.EsFallo)
+        {
+            return Result<Guid>.Fallo(new Error(nombreResult.Error.Codigo, nombreResult.Error.Nombre));
+        }
+
+        var stockResult = Cantidad.Crear(command.Stock);
+        if (stockResult.EsFallo)
+        {
+            return Result<Guid>.Fallo(new Error(stockResult.Error.Codigo, stockResult.Error.Nombre));
+        }
+
+        var stockMinimoResult = Cantidad.Crear(command.StockMinimo);
+        if (stockMinimoResult.EsFallo)
+        {
+            return Result<Guid>.Fallo(new Error(stockMinimoResult.Error.Codigo, stockMinimoResult.Error.Nombre));
+        }
+
         try
         {
             var producto = Producto.Crear(
-                command.CodigoBarras,
-                command.Nombre,
-                command.PrecioCompra,
-                command.PrecioVenta,
+                codigoBarrasResult.Valor,
+                nombreResult.Valor,
+                new Dinero(command.PrecioCompra, "USD"),
+                new Dinero(command.PrecioVenta, "USD"),
                 command.IdCategoria,
-                command.Descripcion,
-                command.Stock,
-                command.StockMinimo
+                new Descripcion(command.Descripcion ?? string.Empty),
+                stockResult.Valor,
+                stockMinimoResult.Valor
             );
 
             await repositorioProducto.AgregarAsync(producto, cancellationToken);

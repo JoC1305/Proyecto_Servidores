@@ -1,3 +1,4 @@
+using Dominio.Compartido;
 using Dominio.Entidades.Categoria;
 using Dominio.Entidades.Compras;
 using Dominio.Entidades.Contabilidad;
@@ -38,20 +39,38 @@ public sealed class ContextoDb : DbContext
         {
             entity.ToTable("Categorias");
             entity.HasKey(categoria => categoria.Id);
-            entity.Property(categoria => categoria.Nombre).HasMaxLength(120).IsRequired();
-            entity.Property(categoria => categoria.Descripcion).HasMaxLength(500);
+            entity.Property(categoria => categoria.Nombre)
+                .HasConversion(v => v.Valor, v => new Nombre(v))
+                .HasMaxLength(120).IsRequired();
+            entity.Property(categoria => categoria.Descripcion)
+                .HasConversion(v => v.Valor, v => new Descripcion(v))
+                .HasMaxLength(500);
         });
 
         modelBuilder.Entity<Producto>(entity =>
         {
             entity.ToTable("Productos");
             entity.HasKey(producto => producto.Id);
-            entity.Property(producto => producto.Codigo_Barras).HasColumnName("CodigoBarras").HasMaxLength(80).IsRequired();
-            entity.HasIndex(producto => producto.Codigo_Barras).IsUnique();
-            entity.Property(producto => producto.Nombre).HasMaxLength(160).IsRequired();
-            entity.Property(producto => producto.Descripcion).HasMaxLength(500);
-            entity.Property(producto => producto.PrecioCompra).HasPrecision(12, 2);
-            entity.Property(producto => producto.PrecioVenta).HasPrecision(12, 2);
+            entity.Property(producto => producto.CodigoBarras)
+                .HasConversion(v => v.Valor, v => new CodigoBarras(v))
+                .HasColumnName("CodigoBarras").HasMaxLength(80).IsRequired();
+            entity.HasIndex(producto => producto.CodigoBarras).IsUnique();
+            entity.Property(producto => producto.Nombre)
+                .HasConversion(v => v.Valor, v => new Nombre(v))
+                .HasMaxLength(160).IsRequired();
+            entity.Property(producto => producto.Descripcion)
+                .HasConversion(v => v.Valor, v => new Descripcion(v))
+                .HasMaxLength(500);
+            entity.Property(producto => producto.PrecioCompra)
+                .HasConversion(v => v.Monto, v => new Dinero(v, "USD"))
+                .HasPrecision(12, 2);
+            entity.Property(producto => producto.PrecioVenta)
+                .HasConversion(v => v.Monto, v => new Dinero(v, "USD"))
+                .HasPrecision(12, 2);
+            entity.Property(producto => producto.Stock)
+                .HasConversion(v => v.Valor, v => new Cantidad(v));
+            entity.Property(producto => producto.StockMinimo)
+                .HasConversion(v => v.Valor, v => new Cantidad(v));
             entity.Ignore(producto => producto.Ganancia);
             entity.HasOne<Categoria>().WithMany().HasForeignKey(producto => producto.IdCategoria).OnDelete(DeleteBehavior.Restrict);
         });
@@ -61,6 +80,8 @@ public sealed class ContextoDb : DbContext
             entity.ToTable("MovimientosInventario");
             entity.HasKey(movimiento => movimiento.Id);
             entity.Property(movimiento => movimiento.Tipo).HasConversion<string>().HasMaxLength(20);
+            entity.Property(movimiento => movimiento.Cantidad)
+                .HasConversion(v => v.Valor, v => new Cantidad(v));
             entity.Property(movimiento => movimiento.Observacion).HasMaxLength(500);
             entity.HasOne<Producto>().WithMany().HasForeignKey(movimiento => movimiento.ProductoId).OnDelete(DeleteBehavior.Restrict);
         });
@@ -69,8 +90,10 @@ public sealed class ContextoDb : DbContext
         {
             entity.ToTable("Ventas");
             entity.HasKey(venta => venta.Id);
-            entity.Ignore(venta => venta.EventosDominio);
-            entity.Property(venta => venta.Total).HasPrecision(12, 2);
+            entity.Ignore(venta => venta.Detalles);
+            entity.Property(venta => venta.Total)
+                .HasConversion(v => v.Monto, v => new Dinero(v, "USD"))
+                .HasPrecision(12, 2);
             entity.Property(venta => venta.MetodoPago).HasConversion<string>().HasMaxLength(40);
             entity.HasMany(venta => venta.Detalles).WithOne().HasForeignKey(detalle => detalle.VentaId).OnDelete(DeleteBehavior.Cascade);
         });
@@ -79,7 +102,11 @@ public sealed class ContextoDb : DbContext
         {
             entity.ToTable("DetallesVenta");
             entity.HasKey(detalle => detalle.Id);
-            entity.Property(detalle => detalle.PrecioUnitario).HasPrecision(12, 2);
+            entity.Property(detalle => detalle.Cantidad)
+                .HasConversion(v => v.Valor, v => new Cantidad(v));
+            entity.Property(detalle => detalle.PrecioUnitario)
+                .HasConversion(v => v.Monto, v => new Dinero(v, "USD"))
+                .HasPrecision(12, 2);
             entity.Ignore(detalle => detalle.Subtotal);
             entity.HasOne<Producto>().WithMany().HasForeignKey(detalle => detalle.ProductoId).OnDelete(DeleteBehavior.Restrict);
         });
@@ -88,7 +115,9 @@ public sealed class ContextoDb : DbContext
         {
             entity.ToTable("Compras");
             entity.HasKey(compra => compra.Id);
-            entity.Property(compra => compra.Total).HasPrecision(12, 2);
+            entity.Property(compra => compra.Total)
+                .HasConversion(v => v.Monto, v => new Dinero(v, "USD"))
+                .HasPrecision(12, 2);
             entity.HasMany(compra => compra.Detalles).WithOne().HasForeignKey(detalle => detalle.CompraId).OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -96,7 +125,11 @@ public sealed class ContextoDb : DbContext
         {
             entity.ToTable("DetallesCompra");
             entity.HasKey(detalle => detalle.Id);
-            entity.Property(detalle => detalle.PrecioCompra).HasPrecision(12, 2);
+            entity.Property(detalle => detalle.Cantidad)
+                .HasConversion(v => v.Valor, v => new Cantidad(v));
+            entity.Property(detalle => detalle.PrecioCompra)
+                .HasConversion(v => v.Monto, v => new Dinero(v, "USD"))
+                .HasPrecision(12, 2);
             entity.Ignore(detalle => detalle.Subtotal);
             entity.HasOne<Producto>().WithMany().HasForeignKey(detalle => detalle.ProductoId).OnDelete(DeleteBehavior.Restrict);
         });

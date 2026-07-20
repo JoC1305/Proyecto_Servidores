@@ -1,6 +1,7 @@
 using Aplicacion.Abstracciones.Persistencia;
 using Aplicacion.Comun.CQRS;
 using Aplicacion.Comun.Resultados;
+using Dominio.Compartido;
 using Dominio.Entidades.Compras;
 using Dominio.Entidades.Contabilidad;
 using Dominio.Entidades.Inventario;
@@ -50,14 +51,22 @@ public sealed class RegistrarCompraCommandHandler : ICommandHandler<RegistrarCom
                     return Result<Guid>.Fallo(new Error("Producto.NoEncontrado", "Uno de los productos indicados no existe."));
                 }
 
-                producto.AumentarStock(detalle.Cantidad);
-                compra.AgregarDetalle(detalle.ProductoId, detalle.Cantidad, detalle.PrecioCompra);
-                movimientos.Add(MovimientoInventario.CrearEntrada(detalle.ProductoId, detalle.Cantidad, $"Compra {compra.Id}"));
+                var cantidadResult = Cantidad.CrearPositiva(detalle.Cantidad);
+                if (cantidadResult.EsFallo)
+                {
+                    return Result<Guid>.Fallo(new Error(cantidadResult.Error.Codigo, cantidadResult.Error.Nombre));
+                }
+
+                var precio = new Dinero(detalle.PrecioCompra, "USD");
+
+                producto.AumentarStock(cantidadResult.Valor);
+                compra.AgregarDetalle(detalle.ProductoId, cantidadResult.Valor, precio);
+                movimientos.Add(MovimientoInventario.CrearEntrada(detalle.ProductoId, cantidadResult.Valor, $"Compra {compra.Id}"));
             }
 
             var asiento = AsientoContable.Crear($"Registro de compra {compra.Id}");
-            asiento.AgregarDetalle(command.CuentaInventarioId, compra.Total, 0);
-            asiento.AgregarDetalle(command.CuentaProveedoresPorPagarId, 0, compra.Total);
+            asiento.AgregarDetalle(command.CuentaInventarioId, compra.Total.Monto, 0);
+            asiento.AgregarDetalle(command.CuentaProveedoresPorPagarId, 0, compra.Total.Monto);
 
             await repositorioCompra.AgregarAsync(compra, cancellationToken);
             await repositorioMovimientoInventario.AgregarRangoAsync(movimientos, cancellationToken);

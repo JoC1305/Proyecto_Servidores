@@ -1,7 +1,9 @@
 using Aplicacion.Abstracciones.Persistencia;
 using Aplicacion.Comun.CQRS;
 using Aplicacion.Comun.Resultados;
+using Dominio.Compartido;
 using Dominio.Entidades.Categoria;
+using Dominio.Entidades.Inventario;
 
 namespace Aplicacion.Categorias.CrearCategoria;
 
@@ -18,9 +20,18 @@ public sealed class CrearCategoriaCommandHandler : ICommandHandler<CrearCategori
 
     public async Task<Result<Guid>> Handle(CrearCategoriaCommand command, CancellationToken cancellationToken = default)
     {
+        var nombreResult = Nombre.Crear(command.Nombre);
+        if (nombreResult.EsFallo)
+        {
+            return Result<Guid>.Fallo(new Error(nombreResult.Error.Codigo, nombreResult.Error.Nombre));
+        }
+
         try
         {
-            var categoria = Categoria.Crear(command.Nombre, command.Descripcion);
+            var categoria = Categoria.Crear(
+                nombreResult.Valor,
+                new Descripcion(command.Descripcion ?? string.Empty)
+            );
 
             await repositorioCategoria.AgregarAsync(categoria, cancellationToken);
             await unidadDeTrabajo.GuardarCambiosAsync(cancellationToken);

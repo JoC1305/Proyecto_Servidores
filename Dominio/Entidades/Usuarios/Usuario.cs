@@ -1,25 +1,24 @@
+using Dominio.Comun;
+using Dominio.Compartido;
+
 namespace Dominio.Entidades.Usuarios;
 
-public class Usuario
+public class Usuario : Entidad
 {
-    public Guid Id { get; private set; }
-    public string Nombre { get; private set; } = null!;
-    public string Email { get; private set; } = null!;
+    public Nombre Nombre { get; private set; } = null!;
+
+    public CorreoElectronico Email { get; private set; } = null!;
+
     public string HashContrasena { get; private set; } = null!;
+
     public RolUsuario Rol { get; private set; }
 
-    private Usuario(string nombre, string email, string hashContrasena, RolUsuario rol)
+    private Usuario()
     {
-        if (string.IsNullOrWhiteSpace(nombre))
-        {
-            throw new ArgumentException("El nombre no puede estar vacio.", nameof(nombre));
-        }
+    }
 
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            throw new ArgumentException("El email no puede estar vacio.", nameof(email));
-        }
-
+    private Usuario(Nombre nombre, CorreoElectronico email, string hashContrasena, RolUsuario rol)
+    {
         if (string.IsNullOrWhiteSpace(hashContrasena))
         {
             throw new ArgumentException("La contrasena no puede estar vacia.", nameof(hashContrasena));
@@ -30,14 +29,13 @@ public class Usuario
             throw new ArgumentException("El rol proporcionado no es valido.", nameof(rol));
         }
 
-        Id = Guid.NewGuid();
-        Nombre = nombre.Trim();
-        Email = email.Trim().ToLowerInvariant();
+        Nombre = nombre;
+        Email = email;
         HashContrasena = hashContrasena;
         Rol = rol;
     }
 
-    public static Usuario Crear(string nombre, string email, string hashContrasena, RolUsuario rol)
+    public static Usuario Crear(Nombre nombre, CorreoElectronico email, string hashContrasena, RolUsuario rol)
     {
         return new Usuario(nombre, email, hashContrasena, rol);
     }
