@@ -90,7 +90,6 @@ public sealed class ContextoDb : DbContext
         {
             entity.ToTable("Ventas");
             entity.HasKey(venta => venta.Id);
-            entity.Ignore(venta => venta.Detalles);
             entity.Property(venta => venta.Total)
                 .HasConversion(v => v.Monto, v => new Dinero(v, "USD"))
                 .HasPrecision(12, 2);

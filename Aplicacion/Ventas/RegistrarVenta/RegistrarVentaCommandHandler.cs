@@ -102,6 +102,6 @@ public sealed class RegistrarVentaCommandHandler : ICommandHandler<RegistrarVent
 
     private static Guid ObtenerCuentaDebito(RegistrarVentaCommand command)
     {
-        return command.CuentaCajaBancoId ?? Guid.Empty;
+        return command.CuentaCajaBancoId ?? command.CuentaClientesPorCobrarId ?? Guid.Empty;
     }
 }

@@ -1,6 +1,81 @@
-@API_HostAddress = http://localhost:5028
+@API_HostAddress = https://localhost:7057
 
-GET {{API_HostAddress}}/weatherforecast/
+
+### 1. Escritura: Crear una Categoria
+POST {{API_HostAddress}}/api/categorias
+Content-Type: application/json
+
+{
+  "nombre": "Frutas y Verduras",
+  "descripcion": "Categoria de frutas, verduras y hortalizas frescas"
+}
+
+###
+
+### 2. Escritura: Crear un Producto
+POST {{API_HostAddress}}/api/productos
+Content-Type: application/json
+
+{
+  "codigoBarras": "7701234567890",
+  "nombre": "Manzana Criolla 1kg",
+  "precioCompra": 1.50,
+  "precioVenta": 2.50,
+  "idCategoria": "08dcd5b1-1234-4567-89ab-cdef01234567",
+  "descripcion": "Manzana criolla fresca por kilo",
+  "stock": 100,
+  "stockMinimo": 10
+}
+
+
+### 3. Lectura: Obtener todas las Categorias
+GET {{API_HostAddress}}/api/categorias
 Accept: application/json
 
 ###
+
+### 4. Lectura: Obtener todos los Productos
+GET {{API_HostAddress}}/api/productos
+Accept: application/json
+
+
+### 5. Logica: Registrar una Compra (Incrementa stock, movimiento de inventario y asiento contable)
+POST {{API_HostAddress}}/api/compras
+Content-Type: application/json
+
+{
+  "proveedorId": "11111111-1111-1111-1111-111111111111",
+  "pedidoId": "22222222-2222-2222-2222-222222222222",
+  "detalles": [
+    {
+      "productoId": "08dcd5b1-9999-4567-89ab-cdef01234567",
+      "cantidad": 50,
+      "precioCompra": 1.50
+    }
+  ],
+  "cuentaInventarioId": "33333333-3333-3333-3333-333333333333",
+  "cuentaProveedoresPorPagarId": "44444444-4444-4444-4444-444444444444"
+}
+
+###
+
+### 6. Logica: Registrar una Venta (Disminuye stock, movimiento de inventario, asiento contable y evento de dominio)
+POST {{API_HostAddress}}/api/ventas
+Content-Type: application/json
+
+{
+  "usuarioId": "55555555-5555-5555-5555-555555555555",
+  "metodoPago": "Efectivo",
+  "detalles": [
+    {
+      "productoId": "08dcd5b1-9999-4567-89ab-cdef01234567",
+      "cantidad": 2,
+      "precioUnitario": 2.50
+    }
+  ],
+  "cuentaVentasId": "66666666-6666-6666-6666-666666666666",
+  "cuentaCajaBancoId": "77777777-7777-7777-7777-777777777777",
+  "cuentaClientesPorCobrarId": null
+}
+
+
