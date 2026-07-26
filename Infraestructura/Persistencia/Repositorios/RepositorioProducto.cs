@@ -1,4 +1,5 @@
 using Aplicacion.Abstracciones.Persistencia;
+using Dominio.Compartido;
 using Dominio.Entidades.Inventario;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,7 +31,8 @@ public sealed class RepositorioProducto : IRepositorioProducto
 
     public Task<bool> ExisteCodigoBarrasAsync(string codigoBarras, CancellationToken cancellationToken = default)
     {
-        var codigoNormalizado = codigoBarras.Trim();
-        return contextoDb.Productos.AnyAsync(producto => producto.CodigoBarras.Valor == codigoNormalizado, cancellationToken);
+        var codigoVo = new CodigoBarras(codigoBarras.Trim());
+
+        return contextoDb.Productos.AnyAsync(producto => producto.CodigoBarras == codigoVo, cancellationToken);
     }
 }

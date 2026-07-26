@@ -48,7 +48,7 @@ Content-Type: application/json
   "pedidoId": "22222222-2222-2222-2222-222222222222",
   "detalles": [
     {
-      "productoId": "08dcd5b1-9999-4567-89ab-cdef01234567",
+      "productoId": "4b327de3-5083-4201-bb41-6d631f733b8a",
       "cantidad": 50,
       "precioCompra": 1.50
     }
@@ -68,7 +68,7 @@ Content-Type: application/json
   "metodoPago": "Efectivo",
   "detalles": [
     {
-      "productoId": "08dcd5b1-9999-4567-89ab-cdef01234567",
+      "productoId": "4b327de3-5083-4201-bb41-6d631f733b8a",
       "cantidad": 2,
       "precioUnitario": 2.50
     }

@@ -15,7 +15,12 @@ public static class DependencyInjection
     {
         var connectionString = configuration.GetConnectionString("AgromarketFCVT");
 
-        services.AddDbContext<ContextoDb>(options => options.UseNpgsql(connectionString));
+        services.AddDbContext<ContextoDb>(options =>
+        {
+            options.UseNpgsql(connectionString);
+            options.ConfigureWarnings(warnings =>
+                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+        });
         services.AddScoped<IRepositorioCategoria, RepositorioCategoria>();
         services.AddScoped<IRepositorioProducto, RepositorioProducto>();
         services.AddScoped<IRepositorioAsientoContable, RepositorioAsientoContable>();
